@@ -1,0 +1,21 @@
+{
+  "rules": {
+    ".read": false,
+    ".write": false,
+    "users": {
+      "$uid": {
+        ".read": "$uid === auth.uid",
+        ".write": "$uid === auth.uid",
+        ".validate": "newData.hasChildren(['uid', 'firstName', 'lastName', 'email', 'phone', 'createdAt']) && newData.child('uid').val() === auth.uid"
+      }
+    },
+    "vehicles": {
+      ".read": true,
+      ".write": false
+    },
+    "bids": {
+      ".read": true,
+      ".write": false
+    }
+  }
+}
