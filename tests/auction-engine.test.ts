@@ -37,6 +37,24 @@ describe("motor atómico de subastas", () => {
     expect(result.record.public.bidCount).toBe(1);
   });
 
+  it("acepta la primera oferta cuando Firebase omitió el valor null", () => {
+    const serialized = createAuctionRecord(vehicle, liveNow);
+    const publicWithoutNull = { ...serialized.public } as Partial<
+      typeof serialized.public
+    >;
+    delete publicWithoutNull.currentBidCents;
+    const result = bid(
+      {
+        ...serialized,
+        public: publicWithoutNull as typeof serialized.public,
+      },
+      "user-a",
+      baseCents + 1,
+    );
+    expect(result.accepted).toBe(true);
+    expect(result.record.public.currentBidCents).toBe(baseCents + 1);
+  });
+
   it("rechaza una primera oferta igual al precio base", () => {
     const result = bid(undefined, "user-a", baseCents);
     expect(result.accepted).toBe(false);

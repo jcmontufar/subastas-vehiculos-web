@@ -49,6 +49,7 @@ export function normalizeAuctionRecord(
 ) {
   const current = record ?? createAuctionRecord(vehicle, now);
   const hasBids = current.public.bidCount > 0;
+  const currentBidCents = current.public.currentBidCents ?? null;
   const publicState: PublicAuctionState = {
     ...current.public,
     vehicleId: vehicle.id,
@@ -57,6 +58,7 @@ export function normalizeAuctionRecord(
       : numberToCents(vehicle.basePrice),
     startAt: hasBids ? current.public.startAt : vehicle.startAt,
     endAt: hasBids ? current.public.endAt : vehicle.endAt,
+    currentBidCents,
   };
   const status = getAuctionStatus(publicState, now);
   const minimumNextBidCents = getMinimumNextBidCents(
@@ -69,7 +71,8 @@ export function normalizeAuctionRecord(
     minimumNextBidCents === current.public.minimumNextBidCents &&
     publicState.basePriceCents === current.public.basePriceCents &&
     publicState.startAt === current.public.startAt &&
-    publicState.endAt === current.public.endAt
+    publicState.endAt === current.public.endAt &&
+    current.public.currentBidCents === currentBidCents
   ) {
     return current;
   }
