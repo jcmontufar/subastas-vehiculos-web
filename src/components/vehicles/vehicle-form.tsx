@@ -20,7 +20,8 @@ import {
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/auth-context";
 import { storage } from "@/lib/firebase/client";
-import { vehicleSchema } from "@/lib/validations";
+import { getFirebaseErrorDetails } from "@/lib/firebase/errors";
+import { vehicleDetailsSchema, vehicleSchema } from "@/lib/validations";
 import type { Vehicle, VehicleImage } from "@/types/domain";
 
 type FormValues = {
@@ -37,6 +38,15 @@ type FormValues = {
   basePrice: string;
   startAt: string;
   endAt: string;
+};
+
+const MAX_IMAGE_BYTES = 8 * 1024 * 1024;
+const MAX_IMAGES = 12;
+const ALLOWED_IMAGE_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
+
+const toIsoDate = (value: string) => {
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? value : date.toISOString();
 };
 
 const toLocalDate = (value?: string) =>
@@ -91,12 +101,13 @@ export function VehicleForm({ vehicle }: { vehicle?: Vehicle }) {
   const addFiles = (selected: FileList | null) => {
     if (!selected) return;
     const valid = Array.from(selected).filter(
-      (file) => file.type.startsWith("image/") && file.size <= 8 * 1024 * 1024,
+      (file) =>
+        ALLOWED_IMAGE_TYPES.has(file.type) && file.size < MAX_IMAGE_BYTES,
     );
     if (valid.length !== selected.length)
-      toast.error("Solo se aceptan imágenes de hasta 8 MB.");
+      toast.error("Solo se aceptan imágenes JPG, PNG o WebP menores de 8 MB.");
     setFiles((current) =>
-      [...current, ...valid].slice(0, 12 - existing.length),
+      [...current, ...valid].slice(0, MAX_IMAGES - existing.length),
     );
   };
 
@@ -125,13 +136,19 @@ export function VehicleForm({ vehicle }: { vehicle?: Vehicle }) {
             ),
           ),
         reject,
-        async () =>
-          resolve({
-            id,
-            url: await getDownloadURL(task.snapshot.ref),
-            storagePath,
-            order: existing.length + index,
-          }),
+        async () => {
+          try {
+            resolve({
+              id,
+              url: await getDownloadURL(task.snapshot.ref),
+              storagePath,
+              order: existing.length + index,
+            });
+          } catch (error) {
+            await deleteObject(task.snapshot.ref).catch(() => undefined);
+            reject(error);
+          }
+        },
       );
     });
 
@@ -139,30 +156,35 @@ export function VehicleForm({ vehicle }: { vehicle?: Vehicle }) {
     if (!user) return toast.error("Debes iniciar sesión.");
     if (existing.length + files.length < 5)
       return toast.error("Debes incluir al menos 5 fotografías.");
+    const uploaded: VehicleImage[] = [];
     try {
+      const details = vehicleDetailsSchema.safeParse({
+        ...values,
+        year: Number(values.year),
+        cylinders: Number(values.cylinders),
+        basePrice: Number(values.basePrice),
+        startAt: toIsoDate(values.startAt),
+        endAt: toIsoDate(values.endAt),
+      });
+      if (!details.success)
+        throw new Error(
+          details.error.issues[0]?.message ?? "Verifica la ficha técnica",
+        );
+
       setUploadProgress(files.length ? 1 : 100);
-      const uploaded: VehicleImage[] = [];
       for (let index = 0; index < files.length; index += 1)
         uploaded.push(await uploadFile(files[index], index));
       const images = [...existing, ...uploaded].map((image, order) => ({
         ...image,
         order,
       }));
-      const payload = {
-        ...values,
-        year: Number(values.year),
-        cylinders: Number(values.cylinders),
-        basePrice: Number(values.basePrice),
-        startAt: new Date(values.startAt).toISOString(),
-        endAt: new Date(values.endAt).toISOString(),
-        images,
-      };
+      const payload = { ...details.data, images };
       const parsed = vehicleSchema.safeParse(payload);
       if (!parsed.success)
         throw new Error(
           parsed.error.issues[0]?.message ?? "Verifica los datos",
         );
-      const token = await user.getIdToken();
+      const token = await user.getIdToken(true);
       const response = await fetch(
         vehicle ? `/api/vehicles/${vehicle.id}` : "/api/vehicles",
         {
@@ -174,7 +196,7 @@ export function VehicleForm({ vehicle }: { vehicle?: Vehicle }) {
           body: JSON.stringify(parsed.data),
         },
       );
-      const result = (await response.json()) as {
+      const result = (await response.json().catch(() => ({}))) as {
         data?: Vehicle;
         error?: string;
       };
@@ -182,23 +204,37 @@ export function VehicleForm({ vehicle }: { vehicle?: Vehicle }) {
         throw new Error(result.error ?? "No fue posible guardar");
       if (storage) {
         const storageInstance = storage;
-        await Promise.allSettled(
+        const deletions = await Promise.allSettled(
           removed
             .filter((image) => image.storagePath !== "demo")
             .map((image) =>
               deleteObject(ref(storageInstance, image.storagePath)),
             ),
         );
+        if (deletions.some((deletion) => deletion.status === "rejected")) {
+          toast.warning(
+            "Los cambios se guardaron, pero algunas fotografías anteriores no pudieron eliminarse.",
+          );
+        }
       }
       toast.success(vehicle ? "Publicación actualizada" : "Vehículo publicado");
       router.push(`/vehiculos/${result.data.id}`);
       router.refresh();
-    } catch (error) {
-      toast.error(
+    } catch (error: unknown) {
+      if (storage && uploaded.length > 0) {
+        const storageInstance = storage;
+        await Promise.allSettled(
+          uploaded.map((image) =>
+            deleteObject(ref(storageInstance, image.storagePath)),
+          ),
+        );
+      }
+      const fallback =
         error instanceof Error
           ? error.message
-          : "No fue posible guardar la publicación",
-      );
+          : "No fue posible guardar la publicación";
+      const details = getFirebaseErrorDetails(error, fallback);
+      toast.error(details.message);
       setUploadProgress(0);
     }
   };

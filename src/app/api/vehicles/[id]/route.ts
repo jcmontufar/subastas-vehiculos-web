@@ -3,6 +3,7 @@ import { ApiAuthError, requireUser } from "@/lib/auth/server";
 import { demoVehicles } from "@/lib/demo-data";
 import { adminDatabase } from "@/lib/firebase/admin";
 import { vehicleSchema } from "@/lib/validations";
+import { vehicleImagesBelongToUser } from "@/lib/vehicles/security";
 import type { Vehicle } from "@/types/domain";
 
 interface Context {
@@ -17,14 +18,21 @@ export async function GET(_request: NextRequest, { params }: Context) {
       ? NextResponse.json({ data: vehicle, demo: true })
       : NextResponse.json({ error: "Vehículo no encontrado" }, { status: 404 });
   }
-  const snapshot = await adminDatabase.ref(`vehicles/${id}`).get();
-  if (!snapshot.exists()) {
+  try {
+    const snapshot = await adminDatabase.ref(`vehicles/${id}`).get();
+    if (!snapshot.exists()) {
+      return NextResponse.json(
+        { error: "Vehículo no encontrado" },
+        { status: 404 },
+      );
+    }
+    return NextResponse.json({ data: snapshot.val() as Vehicle });
+  } catch {
     return NextResponse.json(
-      { error: "Vehículo no encontrado" },
-      { status: 404 },
+      { error: "No fue posible consultar el vehículo" },
+      { status: 503 },
     );
   }
-  return NextResponse.json({ data: snapshot.val() as Vehicle });
 }
 
 export async function PUT(request: NextRequest, { params }: Context) {
@@ -48,12 +56,30 @@ export async function PUT(request: NextRequest, { params }: Context) {
         { status: 403 },
       );
     }
-    const parsed = vehicleSchema.safeParse(await request.json());
+    let body: unknown;
+    try {
+      body = await request.json();
+    } catch {
+      return NextResponse.json(
+        { error: "El cuerpo de la solicitud no contiene JSON válido" },
+        { status: 400 },
+      );
+    }
+    const parsed = vehicleSchema.safeParse(body);
     if (!parsed.success) {
       return NextResponse.json(
         {
           error: "Datos de publicación inválidos",
           issues: parsed.error.flatten(),
+        },
+        { status: 400 },
+      );
+    }
+    if (!vehicleImagesBelongToUser(parsed.data.images, user.uid)) {
+      return NextResponse.json(
+        {
+          error:
+            "Todas las fotografías deben pertenecer a tu carpeta de Firebase Storage",
         },
         { status: 400 },
       );

@@ -35,6 +35,17 @@ const firebaseErrorMessages: Record<string, string> = {
     "La cuenta se creó, pero las reglas de Realtime Database rechazaron el perfil.",
   "database/network-error":
     "La cuenta se creó, pero no fue posible guardar el perfil por un problema de red.",
+  "storage/unauthorized":
+    "No tienes permiso para administrar fotografías en esta ubicación.",
+  "storage/canceled": "La subida de fotografías fue cancelada.",
+  "storage/retry-limit-exceeded":
+    "La subida tardó demasiado y Firebase dejó de reintentar. Comprueba tu conexión.",
+  "storage/quota-exceeded":
+    "Firebase Storage alcanzó su límite de uso. Revisa la cuota del proyecto.",
+  "storage/invalid-checksum":
+    "Una fotografía se dañó durante la transferencia. Intenta subirla nuevamente.",
+  "storage/unknown":
+    "Firebase Storage no pudo completar la subida. Inténtalo nuevamente.",
 };
 
 export function getFirebaseErrorDetails(

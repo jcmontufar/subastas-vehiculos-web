@@ -1,13 +1,26 @@
 rules_version = '2';
+
 service firebase.storage {
   match /b/{bucket}/o {
+
     match /vehicles/{userId}/{allPaths=**} {
+
+      // Cualquier visitante puede visualizar las fotografías.
       allow read: if true;
-      allow write: if request.auth != null
-                   && request.auth.uid == userId
-                   && request.resource.size < 8 * 1024 * 1024
-                   && request.resource.contentType.matches('image/.*');
-      allow delete: if request.auth != null && request.auth.uid == userId;
+
+      // Solo el propietario puede subir imágenes.
+      allow create: if request.auth != null
+                    && request.auth.uid == userId
+                    && resource == null
+                    && request.resource.size < 8 * 1024 * 1024
+                    && request.resource.contentType.matches('image/(jpeg|png|webp)');
+
+      // Impedir sobrescribir fotografías existentes.
+      allow update: if false;
+
+      // Solo el propietario puede eliminar sus imágenes.
+      allow delete: if request.auth != null
+                    && request.auth.uid == userId;
     }
   }
 }

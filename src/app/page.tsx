@@ -16,6 +16,7 @@ import {
   VehicleFilters,
 } from "@/components/auction/vehicle-filters";
 import { EmptyState, ErrorState, LoadingState } from "@/components/states";
+import { filterVehicles } from "@/lib/vehicles/filters";
 import type { Vehicle, VehicleFiltersValue } from "@/types/domain";
 
 export default function Home() {
@@ -39,15 +40,7 @@ export default function Home() {
   }, []);
 
   const filtered = useMemo(
-    () =>
-      vehicles.filter((vehicle) =>
-        Object.entries(filters).every(
-          ([key, value]) =>
-            !value ||
-            String(vehicle[key as keyof Vehicle]).toLowerCase() ===
-              value.toLowerCase(),
-        ),
-      ),
+    () => filterVehicles(vehicles, filters),
     [vehicles, filters],
   );
 

@@ -41,6 +41,9 @@ yarn-error.log*
 *.p12
 *service-account*.json
 firebase-debug.log
+database-debug.log
+storage-debug.log
+ui-debug.log
 .firebase/
 .firebaserc.local
 

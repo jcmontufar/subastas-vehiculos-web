@@ -105,8 +105,14 @@ src/
 ```bash
 npm run lint
 npm run typecheck
+npm test
+npm run test:emulators
 npm run build
 ```
+
+`npm run test:emulators` requiere Java 21 o posterior y Firebase CLI. Usa el
+proyecto local `demo-autopujo`; no lee ni modifica datos del proyecto Firebase
+real.
 
 ## Alcance pendiente
 
