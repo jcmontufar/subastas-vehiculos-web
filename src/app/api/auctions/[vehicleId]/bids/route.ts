@@ -4,6 +4,8 @@ import { AuctionServiceError, placeBid } from "@/lib/auctions/server";
 import { ApiAuthError, requireUser } from "@/lib/auth/server";
 import { adminDatabase } from "@/lib/firebase/admin";
 
+export const runtime = "nodejs";
+
 interface Context {
   params: Promise<{ vehicleId: string }>;
 }

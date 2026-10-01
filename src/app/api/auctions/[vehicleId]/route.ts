@@ -4,6 +4,8 @@ import { AuctionServiceError, getAuction } from "@/lib/auctions/server";
 import { demoVehicles } from "@/lib/demo-data";
 import { adminDatabase } from "@/lib/firebase/admin";
 
+export const runtime = "nodejs";
+
 interface Context {
   params: Promise<{ vehicleId: string }>;
 }

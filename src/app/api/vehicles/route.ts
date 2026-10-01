@@ -6,6 +6,8 @@ import { vehicleSchema } from "@/lib/validations";
 import { vehicleImagesBelongToUser } from "@/lib/vehicles/security";
 import type { AuctionRecord, Vehicle } from "@/types/domain";
 
+export const runtime = "nodejs";
+
 export async function GET() {
   if (!adminDatabase) {
     return NextResponse.json({ data: demoVehicles, demo: true });

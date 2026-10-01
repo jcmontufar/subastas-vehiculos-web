@@ -7,6 +7,8 @@ import { vehicleSchema } from "@/lib/validations";
 import { vehicleImagesBelongToUser } from "@/lib/vehicles/security";
 import type { PublicAuctionState, Vehicle } from "@/types/domain";
 
+export const runtime = "nodejs";
+
 interface Context {
   params: Promise<{ id: string }>;
 }
