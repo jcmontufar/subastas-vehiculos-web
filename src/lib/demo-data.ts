@@ -25,6 +25,7 @@ export const demoVehicles: Vehicle[] = [
     })),
     basePrice: 98000,
     currentBid: 104500,
+    bidCount: 3,
     startAt: new Date(now - day).toISOString(),
     endAt: new Date(now + day * 2).toISOString(),
     createdAt: new Date(now - day * 3).toISOString(),

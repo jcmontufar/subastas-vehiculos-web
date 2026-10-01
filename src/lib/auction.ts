@@ -1,20 +1,33 @@
-import type { AuctionStatus, Vehicle } from "@/types/domain";
+import type {
+  AuctionStatus,
+  PublicAuctionState,
+  Vehicle,
+} from "@/types/domain";
 
 export function getAuctionStatus(
-  vehicle: Pick<Vehicle, "startAt" | "endAt">,
+  vehicle: Pick<Vehicle, "startAt" | "endAt"> &
+    Partial<Pick<PublicAuctionState, "bidCount">> &
+    Partial<Pick<Vehicle, "currentBid">>,
+  now = Date.now(),
 ): AuctionStatus {
-  const now = Date.now();
-  if (now < new Date(vehicle.startAt).getTime()) return "PENDING";
-  if (now >= new Date(vehicle.endAt).getTime()) return "ENDED";
-  return "ACTIVE";
+  if (now < new Date(vehicle.startAt).getTime()) return "UPCOMING";
+  if (now < new Date(vehicle.endAt).getTime()) return "LIVE";
+  return (vehicle.bidCount ?? (vehicle.currentBid ? 1 : 0)) > 0
+    ? "SOLD"
+    : "UNSOLD";
 }
 
 export function formatCurrency(value: number) {
   return new Intl.NumberFormat("es-GT", {
     style: "currency",
     currency: "GTQ",
-    maximumFractionDigits: 0,
+    minimumFractionDigits: value % 1 === 0 ? 0 : 2,
+    maximumFractionDigits: 2,
   }).format(value);
+}
+
+export function formatCents(value: number) {
+  return formatCurrency(value / 100);
 }
 
 export function formatDate(value: string) {
@@ -26,9 +39,10 @@ export function formatDate(value: string) {
 
 export function formatAuctionTime(vehicle: Pick<Vehicle, "startAt" | "endAt">) {
   const status = getAuctionStatus(vehicle);
-  if (status === "ENDED") return "Subasta finalizada";
+  if (status === "SOLD") return "Vehículo vendido";
+  if (status === "UNSOLD") return "Subasta desierta";
   const target = new Date(
-    status === "PENDING" ? vehicle.startAt : vehicle.endAt,
+    status === "UPCOMING" ? vehicle.startAt : vehicle.endAt,
   ).getTime();
   const minutes = Math.max(1, Math.ceil((target - Date.now()) / 60_000));
   const value =
@@ -37,5 +51,5 @@ export function formatAuctionTime(vehicle: Pick<Vehicle, "startAt" | "endAt">) {
       : minutes >= 60
         ? `${Math.ceil(minutes / 60)} h`
         : `${minutes} min`;
-  return status === "PENDING" ? `Inicia en ${value}` : `Cierra en ${value}`;
+  return status === "UPCOMING" ? `Inicia en ${value}` : `Cierra en ${value}`;
 }

@@ -2,20 +2,43 @@
   "rules": {
     ".read": false,
     ".write": false,
+
     "users": {
       "$uid": {
-        ".read": "$uid === auth.uid",
-        ".write": "$uid === auth.uid",
-        ".validate": "newData.hasChildren(['uid', 'firstName', 'lastName', 'email', 'phone', 'createdAt']) && newData.child('uid').val() === auth.uid"
+        ".read": "auth != null && auth.uid === $uid",
+        ".write": "auth != null && auth.uid === $uid",
+        ".validate": "newData.hasChildren(['uid', 'firstName', 'lastName', 'email', 'phone', 'createdAt']) && newData.child('uid').val() === auth.uid && newData.child('email').val() === auth.token.email && (!data.exists() || newData.child('createdAt').val() === data.child('createdAt').val())"
       }
     },
+
     "vehicles": {
       ".read": true,
       ".write": false
     },
+
     "bids": {
-      ".read": true,
+      ".read": false,
       ".write": false
+    },
+
+    "auctions": {
+      "$vehicleId": {
+        ".write": false,
+        "public": {
+          ".read": true,
+          ".write": false
+        },
+        "private": {
+          ".read": false,
+          ".write": false
+        },
+        "userStates": {
+          "$uid": {
+            ".read": "auth != null && auth.uid === $uid",
+            ".write": false
+          }
+        }
+      }
     }
   }
 }

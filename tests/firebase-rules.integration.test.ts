@@ -5,7 +5,7 @@ import {
   initializeTestEnvironment,
   type RulesTestEnvironment,
 } from "@firebase/rules-unit-testing";
-import { afterAll, beforeAll, beforeEach, describe, it } from "vitest";
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
 const emulatorAvailable = Boolean(
   process.env.FIREBASE_DATABASE_EMULATOR_HOST &&
@@ -150,5 +150,86 @@ describe.skipIf(!emulatorAvailable)("reglas de Firebase en emuladores", () => {
           .put(new Uint8Array([1]), { contentType: "image/svg+xml" }),
       ),
     );
+  });
+
+  it("expone solamente el estado público y el estado del usuario autenticado", async () => {
+    await environment.withSecurityRulesDisabled(async (context) => {
+      await context
+        .database()
+        .ref("auctions/vehicle-1")
+        .set({
+          public: {
+            vehicleId: "vehicle-1",
+            currentBidCents: 2_200_000,
+            bidCount: 1,
+          },
+          private: {
+            leaderUid: "owner-1",
+            bids: { "bid-1": { bidderId: "owner-1", amountCents: 2_200_000 } },
+          },
+          userStates: {
+            "owner-1": { hasBid: true, isWinning: true },
+            "other-user": { hasBid: true, isWinning: false },
+          },
+        });
+    });
+    const anonymous = environment.unauthenticatedContext().database();
+    const owner = environment.authenticatedContext("owner-1").database();
+
+    await assertSucceeds(
+      anonymous.ref("auctions/vehicle-1/public").once("value"),
+    );
+    await assertFails(
+      anonymous.ref("auctions/vehicle-1/private").once("value"),
+    );
+    await assertSucceeds(
+      owner.ref("auctions/vehicle-1/userStates/owner-1").once("value"),
+    );
+    await assertFails(
+      owner.ref("auctions/vehicle-1/userStates/other-user").once("value"),
+    );
+  });
+
+  it("impide manipular directamente el estado, historial o pujas", async () => {
+    const owner = environment.authenticatedContext("owner-1").database();
+    await assertFails(
+      owner.ref("auctions/vehicle-1/public/currentBidCents").set(9_999_999),
+    );
+    await assertFails(
+      owner.ref("auctions/vehicle-1/private/bids/fake").set({
+        bidderId: "owner-1",
+        amountCents: 9_999_999,
+      }),
+    );
+    await assertFails(
+      owner.ref("auctions/vehicle-1/userStates/owner-1").set({
+        hasBid: true,
+        isWinning: true,
+      }),
+    );
+  });
+
+  it("entrega actualizaciones públicas mediante listeners en tiempo real", async () => {
+    const publicRef = environment
+      .unauthenticatedContext()
+      .database()
+      .ref("auctions/vehicle-1/public");
+    const nextBid = new Promise<number>((resolve) => {
+      const listener = publicRef.on("value", (snapshot) => {
+        const value = snapshot.val() as { currentBidCents?: number } | null;
+        if (value?.currentBidCents === 2_420_000) {
+          publicRef.off("value", listener);
+          resolve(value.currentBidCents);
+        }
+      });
+    });
+    await environment.withSecurityRulesDisabled(async (context) => {
+      await context.database().ref("auctions/vehicle-1/public").set({
+        vehicleId: "vehicle-1",
+        currentBidCents: 2_420_000,
+        bidCount: 2,
+      });
+    });
+    await expect(nextBid).resolves.toBe(2_420_000);
   });
 });

@@ -4,16 +4,37 @@ import { demoVehicles } from "@/lib/demo-data";
 import { adminDatabase } from "@/lib/firebase/admin";
 import { vehicleSchema } from "@/lib/validations";
 import { vehicleImagesBelongToUser } from "@/lib/vehicles/security";
-import type { Vehicle } from "@/types/domain";
+import type { AuctionRecord, Vehicle } from "@/types/domain";
 
 export async function GET() {
   if (!adminDatabase) {
     return NextResponse.json({ data: demoVehicles, demo: true });
   }
   try {
-    const snapshot = await adminDatabase.ref("vehicles").get();
+    const [snapshot, auctionsSnapshot] = await Promise.all([
+      adminDatabase.ref("vehicles").get(),
+      adminDatabase.ref("auctions").get(),
+    ]);
     const data = snapshot.val() as Record<string, Vehicle> | null;
-    const vehicles = data ? Object.values(data) : [];
+    const auctions = auctionsSnapshot.val() as Record<
+      string,
+      AuctionRecord
+    > | null;
+    const vehicles = data
+      ? Object.values(data).map((vehicle) => {
+          const publicState = auctions?.[vehicle.id]?.public;
+          return publicState
+            ? {
+                ...vehicle,
+                currentBid:
+                  publicState.currentBidCents === null
+                    ? undefined
+                    : publicState.currentBidCents / 100,
+                bidCount: publicState.bidCount,
+              }
+            : vehicle;
+        })
+      : [];
     return NextResponse.json({
       data: vehicles.sort((a, b) => b.createdAt.localeCompare(a.createdAt)),
     });

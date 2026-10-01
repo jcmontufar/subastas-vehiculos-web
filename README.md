@@ -1,6 +1,6 @@
 # AutoPujo — plataforma de subastas de vehículos
 
-Primera fase de una plataforma web de subastas vehiculares construida con Next.js, React, TypeScript, Tailwind CSS, shadcn/ui y Firebase. Esta entrega incluye autenticación, catálogo público, filtros, publicación con fotografías, edición de publicaciones propias y API REST. El motor de pujas en tiempo real queda expresamente fuera de esta fase.
+Plataforma web de subastas vehiculares construida con Next.js, React, TypeScript, Tailwind CSS, shadcn/ui y Firebase. Incluye autenticación, catálogo público, publicación y edición de vehículos, fotografías y un motor de pujas en tiempo real con transacciones atómicas.
 
 ## Estado de despliegue
 
@@ -78,12 +78,14 @@ Las escrituras de vehículos desde el cliente están denegadas por las reglas. L
 
 ## API REST
 
-| Método | Ruta                | Acceso                       |
-| ------ | ------------------- | ---------------------------- |
-| GET    | `/api/vehicles`     | Público                      |
-| GET    | `/api/vehicles/:id` | Público                      |
-| POST   | `/api/vehicles`     | Token Firebase obligatorio   |
-| PUT    | `/api/vehicles/:id` | Token Firebase y propietario |
+| Método | Ruta                            | Acceso                       |
+| ------ | ------------------------------- | ---------------------------- |
+| GET    | `/api/vehicles`                 | Público                      |
+| GET    | `/api/vehicles/:id`             | Público                      |
+| POST   | `/api/vehicles`                 | Token Firebase obligatorio   |
+| PUT    | `/api/vehicles/:id`             | Token Firebase y propietario |
+| GET    | `/api/auctions/:vehicleId`      | Público                      |
+| POST   | `/api/auctions/:vehicleId/bids` | Token Firebase obligatorio   |
 
 Las rutas protegidas esperan `Authorization: Bearer <ID_TOKEN>`.
 
@@ -96,6 +98,7 @@ src/
 ├── contexts/               # Estado global de autenticación
 ├── lib/
 │   ├── auth/               # Verificación de token en servidor
+│   ├── auctions/           # Dinero, reglas de puja y transacciones atómicas
 │   └── firebase/           # Web SDK y Admin SDK separados
 └── types/                  # Modelo de dominio
 ```
@@ -114,6 +117,17 @@ npm run build
 proyecto local `demo-autopujo`; no lee ni modifica datos del proyecto Firebase
 real.
 
-## Alcance pendiente
+## Seguridad del motor de subastas
 
-La siguiente fase debe implementar las pujas con transacciones atómicas de Realtime Database, reglas y validaciones en servidor, actualización sin refrescar, postores anónimos e indicadores “Vas ganando” y “Tu oferta ha sido superada”.
+El cliente solo puede leer `auctions/{vehicleId}/public` y su propio estado en
+`auctions/{vehicleId}/userStates/{uid}`. El historial y el UID del líder se
+guardan bajo `private`, sin lectura desde el navegador. Todas las escrituras de
+pujas pasan por la API y se confirman mediante una transacción sobre la subasta
+completa, manteniendo consistentes el precio, el historial y los indicadores.
+
+Antes de habilitar el tiempo real en producción, valida las reglas con
+`npm run test:emulators` y despliega explícitamente:
+
+```bash
+firebase deploy --project subasta-vehiculos-907c4 --only database
+```

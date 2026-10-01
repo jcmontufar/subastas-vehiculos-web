@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { ApiAuthError, requireUser } from "@/lib/auth/server";
+import { numberToCents } from "@/lib/auctions/money";
 import { demoVehicles } from "@/lib/demo-data";
 import { adminDatabase } from "@/lib/firebase/admin";
 import { vehicleSchema } from "@/lib/validations";
 import { vehicleImagesBelongToUser } from "@/lib/vehicles/security";
-import type { Vehicle } from "@/types/domain";
+import type { PublicAuctionState, Vehicle } from "@/types/domain";
 
 interface Context {
   params: Promise<{ id: string }>;
@@ -19,14 +20,30 @@ export async function GET(_request: NextRequest, { params }: Context) {
       : NextResponse.json({ error: "Vehículo no encontrado" }, { status: 404 });
   }
   try {
-    const snapshot = await adminDatabase.ref(`vehicles/${id}`).get();
+    const [snapshot, auctionSnapshot] = await Promise.all([
+      adminDatabase.ref(`vehicles/${id}`).get(),
+      adminDatabase.ref(`auctions/${id}/public`).get(),
+    ]);
     if (!snapshot.exists()) {
       return NextResponse.json(
         { error: "Vehículo no encontrado" },
         { status: 404 },
       );
     }
-    return NextResponse.json({ data: snapshot.val() as Vehicle });
+    const vehicle = snapshot.val() as Vehicle;
+    const auction = auctionSnapshot.val() as PublicAuctionState | null;
+    return NextResponse.json({
+      data: auction
+        ? {
+            ...vehicle,
+            currentBid:
+              auction.currentBidCents === null
+                ? undefined
+                : auction.currentBidCents / 100,
+            bidCount: auction.bidCount,
+          }
+        : vehicle,
+    });
   } catch {
     return NextResponse.json(
       { error: "No fue posible consultar el vehículo" },
@@ -83,6 +100,26 @@ export async function PUT(request: NextRequest, { params }: Context) {
         },
         { status: 400 },
       );
+    }
+    const auctionSnapshot = await adminDatabase
+      .ref(`auctions/${id}/public`)
+      .get();
+    if (auctionSnapshot.exists()) {
+      const auction = auctionSnapshot.val() as PublicAuctionState;
+      const termsChanged =
+        auction.bidCount > 0 &&
+        (auction.basePriceCents !== numberToCents(parsed.data.basePrice) ||
+          auction.startAt !== parsed.data.startAt ||
+          auction.endAt !== parsed.data.endAt);
+      if (termsChanged) {
+        return NextResponse.json(
+          {
+            error:
+              "El precio base y las fechas no pueden cambiar después de recibir ofertas",
+          },
+          { status: 409 },
+        );
+      }
     }
     const updated: Vehicle = {
       ...current,

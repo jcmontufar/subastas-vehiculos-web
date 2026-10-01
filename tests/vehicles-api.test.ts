@@ -177,6 +177,40 @@ describe("API REST de vehículos", () => {
     );
   });
 
+  it("protege precio y fechas después de la primera oferta", async () => {
+    const original = makeVehicle();
+    mocks.requireUser.mockResolvedValue({ uid: "owner-1" });
+    mocks.databaseRef.mockImplementation((path: string) => {
+      if (path === `vehicles/${original.id}`) {
+        return {
+          get: async () => ({ exists: () => true, val: () => original }),
+          set: vi.fn(),
+        };
+      }
+      return {
+        get: async () => ({
+          exists: () => true,
+          val: () => ({
+            bidCount: 1,
+            basePriceCents: original.basePrice * 100,
+            startAt: original.startAt,
+            endAt: original.endAt,
+          }),
+        }),
+      };
+    });
+
+    const response = await PUT(
+      request("PUT", {
+        ...makeVehicleInput("owner-1"),
+        basePrice: original.basePrice + 1,
+      }),
+      { params: Promise.resolve({ id: original.id }) },
+    );
+
+    expect(response.status).toBe(409);
+  });
+
   it("devuelve 400 para datos inválidos", async () => {
     mocks.requireUser.mockResolvedValue({ uid: "owner-1" });
     const response = await POST(

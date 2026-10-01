@@ -1,9 +1,10 @@
 "use client";
 
-import { CalendarClock, Gavel, Settings2, ShieldAlert } from "lucide-react";
+import { CalendarClock, Settings2 } from "lucide-react";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { AuctionStatusBadge } from "@/components/auction/auction-status-badge";
+import { AuctionPanel } from "@/components/auction/auction-panel";
 import { DamageBadge } from "@/components/auction/damage-badge";
 import { ImageCarousel } from "@/components/auction/image-carousel";
 import { ErrorState, LoadingState } from "@/components/states";
@@ -63,10 +64,10 @@ export default function VehicleDetailPage() {
         </div>
         <div className="rounded-2xl border border-slate-200 bg-white px-6 py-4 text-right shadow-sm">
           <p className="text-xs font-bold tracking-wider text-slate-400 uppercase">
-            {vehicle.currentBid ? "Oferta actual" : "Precio base"}
+            Precio base
           </p>
           <p className="text-3xl font-black text-blue-600">
-            {formatCurrency(vehicle.currentBid ?? vehicle.basePrice)}
+            {formatCurrency(vehicle.basePrice)}
           </p>
         </div>
       </div>
@@ -109,29 +110,7 @@ export default function VehicleDetailPage() {
           </section>
         </aside>
       </div>
-      <section className="mt-8 overflow-hidden rounded-2xl border border-blue-200 bg-white shadow-sm">
-        <div className="flex flex-col items-start justify-between gap-5 p-6 sm:flex-row sm:items-center">
-          <div>
-            <h2 className="flex items-center gap-2 text-xl font-black">
-              <Gavel className="text-blue-600" /> Área de subasta
-            </h2>
-            <p className="mt-2 text-slate-500">
-              El motor de pujas en tiempo real estará disponible en la siguiente
-              fase.
-            </p>
-          </div>
-          <button
-            disabled
-            className="rounded-xl bg-slate-200 px-6 py-3 font-bold text-slate-500"
-          >
-            Ofertar próximamente
-          </button>
-        </div>
-        <div className="flex items-center gap-2 border-t border-blue-100 bg-blue-50 px-6 py-3 text-sm text-blue-700">
-          <ShieldAlert className="size-4" /> Las validaciones de puja se
-          implementarán en el servidor en la fase siguiente.
-        </div>
-      </section>
+      <AuctionPanel vehicle={vehicle} />
     </div>
   );
 }
