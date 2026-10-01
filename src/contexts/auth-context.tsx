@@ -9,6 +9,7 @@ import {
 } from "firebase/auth";
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { auth } from "@/lib/firebase/client";
+import { getFirebaseErrorDetails } from "@/lib/firebase/errors";
 
 interface AuthContextValue {
   user: User | null;
@@ -26,7 +27,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (!auth) {
       return;
     }
-    void setPersistence(auth, browserLocalPersistence);
+    void setPersistence(auth, browserLocalPersistence).catch(
+      (error: unknown) => {
+        const details = getFirebaseErrorDetails(error);
+        console.error("No fue posible configurar la persistencia de sesión", {
+          code: details.code,
+        });
+      },
+    );
     return onAuthStateChanged(auth, (nextUser) => {
       setUser(nextUser);
       setLoading(false);

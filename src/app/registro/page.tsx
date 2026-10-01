@@ -1,10 +1,18 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
+import {
+  browserLocalPersistence,
+  createUserWithEmailAndPassword,
+  deleteUser,
+  setPersistence,
+  updateProfile,
+  type UserCredential,
+} from "firebase/auth";
 import { ref, set } from "firebase/database";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { AuthShell } from "@/components/auth/auth-shell";
@@ -13,27 +21,45 @@ import {
   database,
   isFirebaseClientConfigured,
 } from "@/lib/firebase/client";
+import { getFirebaseErrorDetails } from "@/lib/firebase/errors";
 import { registerSchema, type RegisterInput } from "@/lib/validations";
 import type { UserProfile } from "@/types/domain";
 
 export default function RegisterPage() {
   const router = useRouter();
+  const [submitError, setSubmitError] = useState<{
+    message: string;
+    code: string;
+  } | null>(null);
   const {
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
   } = useForm<RegisterInput>({ resolver: zodResolver(registerSchema) });
   const submit = async (data: RegisterInput) => {
-    if (!auth || !database)
+    setSubmitError(null);
+    if (!auth || !database) {
+      const configurationError = {
+        code: "firebase/missing-configuration",
+        message:
+          "Faltan variables de Firebase. Revisa la configuración local antes de registrarte.",
+      };
+      setSubmitError(configurationError);
       return toast.error(
         "Configura las variables de Firebase para registrarte.",
       );
+    }
+
+    let credential: UserCredential | null = null;
+    let profileStage = false;
     try {
-      const credential = await createUserWithEmailAndPassword(
+      await setPersistence(auth, browserLocalPersistence);
+      credential = await createUserWithEmailAndPassword(
         auth,
         data.email,
         data.password,
       );
+      profileStage = true;
       await updateProfile(credential.user, {
         displayName: `${data.firstName} ${data.lastName}`,
       });
@@ -48,8 +74,28 @@ export default function RegisterPage() {
       await set(ref(database, `users/${credential.user.uid}`), profile);
       toast.success("Tu cuenta fue creada");
       router.replace("/");
-    } catch {
-      toast.error("No fue posible crear la cuenta. Verifica los datos.");
+    } catch (error: unknown) {
+      const details = getFirebaseErrorDetails(
+        error,
+        profileStage
+          ? "Firebase creó la cuenta, pero no fue posible guardar el perfil. Inténtalo nuevamente."
+          : "No fue posible crear la cuenta. Revisa la configuración de Firebase e inténtalo nuevamente.",
+      );
+
+      if (credential && profileStage) {
+        try {
+          await deleteUser(credential.user);
+        } catch (rollbackError: unknown) {
+          const rollbackDetails = getFirebaseErrorDetails(rollbackError);
+          console.error("No fue posible revertir el usuario incompleto", {
+            code: rollbackDetails.code,
+          });
+        }
+      }
+
+      console.error("Error de registro en Firebase", { code: details.code });
+      setSubmitError(details);
+      toast.error(details.message);
     }
   };
   const fields: {
@@ -105,6 +151,17 @@ export default function RegisterPage() {
         onSubmit={handleSubmit(submit)}
         className="grid gap-4 sm:grid-cols-2"
       >
+        {submitError && (
+          <div
+            role="alert"
+            className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800 sm:col-span-2"
+          >
+            <p className="font-semibold">{submitError.message}</p>
+            <p className="mt-1 text-xs text-red-600">
+              Código de diagnóstico: {submitError.code}
+            </p>
+          </div>
+        )}
         {fields.map((field) => (
           <label
             key={field.name}

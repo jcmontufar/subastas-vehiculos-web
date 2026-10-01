@@ -62,6 +62,18 @@ Para `FIREBASE_PRIVATE_KEY`, conserva los saltos de línea escapados (`\n`) dent
 7. Agrega los dominios locales y de producción a **Authentication > Settings > Authorized domains**.
 8. Crea tres cuentas de prueba y actualiza la tabla anterior.
 
+### Diagnóstico de registro
+
+Si el registro muestra `auth/invalid-api-key` o
+`auth/api-key-not-valid.-please-pass-a-valid-api-key.`, vuelve a Firebase Console >
+Configuración del proyecto > General > Tus apps, abre la aplicación web y copia
+el valor actual de `apiKey` a `NEXT_PUBLIC_FIREBASE_API_KEY`. Después reinicia el
+servidor de Next.js. Si utilizas restricciones en Google Cloud Console, la clave
+debe pertenecer al mismo proyecto y permitir Identity Toolkit API y Token Service
+API. Un error `auth/operation-not-allowed` requiere habilitar el proveedor
+Correo electrónico/contraseña, mientras que `auth/unauthorized-domain` requiere
+agregar el dominio en Authentication > Settings > Authorized domains.
+
 Las escrituras de vehículos desde el cliente están denegadas por las reglas. La API verifica el ID token, valida el contenido y usa Admin SDK. Storage permite que cada usuario escriba únicamente dentro de su carpeta y limita archivos a imágenes menores de 8 MB.
 
 ## API REST
