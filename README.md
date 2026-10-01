@@ -1,32 +1,51 @@
-# AutoPujo — plataforma de subastas de vehículos
+# AutoPujo — subastas de vehículos en tiempo real
 
-Plataforma web de subastas vehiculares construida con Next.js, React, TypeScript, Tailwind CSS, shadcn/ui y Firebase. Incluye autenticación, catálogo público, publicación y edición de vehículos, fotografías y un motor de pujas en tiempo real con transacciones atómicas.
+> **Producción:** pendiente de despliegue autorizado en Vercel. No existe todavía una URL pública verificada.
 
-## Estado de despliegue
+AutoPujo es una plataforma académica para publicar vehículos, consultar un inventario público y participar en subastas con actualización en tiempo real. La aplicación protege la identidad de los postores y confirma cada oferta mediante una transacción atómica ejecutada en el servidor.
 
-- URL pública: **pendiente de configurar por el propietario del proyecto**.
-- Firebase: **requiere las credenciales del proyecto en `.env.local`**.
-- Mientras Firebase Admin no está configurado, el catálogo muestra tres registros demostrativos de solo lectura para permitir revisar la interfaz. No se presentan como datos persistidos.
+## Objetivo académico
 
-## Usuarios de prueba
+El proyecto demuestra una aplicación web completa con autenticación, inventario filtrable, fotografías, API REST, reglas de seguridad y concurrencia segura. La [matriz de cumplimiento](docs/academic-compliance.md) separa la evidencia local, de emuladores, de Firebase real y la que todavía requiere comprobarse en producción.
 
-La rúbrica solicita tres usuarios. Deben crearse después de habilitar Firebase Authentication; no se incluyen contraseñas inventadas ni credenciales reales en el repositorio.
+## Tecnologías
 
-| Perfil       | Correo                              | Contraseña           | Estado    |
-| ------------ | ----------------------------------- | -------------------- | --------- |
-| Publicador 1 | `pendiente+publicador1@example.com` | Definir fuera de Git | Pendiente |
-| Publicador 2 | `pendiente+publicador2@example.com` | Definir fuera de Git | Pendiente |
-| Postor       | `pendiente+postor@example.com`      | Definir fuera de Git | Pendiente |
+- Next.js 16 (App Router y Route Handlers), React 19 y TypeScript strict.
+- Tailwind CSS 4, shadcn/ui y React Hook Form.
+- Zod para validación compartida.
+- Firebase Authentication, Realtime Database, Storage y Admin SDK.
+- Vitest y Firebase Emulator Suite.
+- Vercel como destino de despliegue.
 
-Reemplaza esta tabla por las credenciales de prueba definitivas antes de entregar o desplegar el proyecto. Nunca uses contraseñas de producción.
+## Arquitectura
 
-## Requisitos
+El navegador utiliza el Firebase Web SDK para autenticación, carga de imágenes y listeners de solo lectura. Las publicaciones y pujas pasan por Route Handlers con runtime Node.js. Estos verifican el ID token, validan el contenido y escriben mediante Firebase Admin. Las reglas bloquean escrituras directas en vehículos y subastas.
 
-- Node.js 20.9 o posterior
-- npm
-- Un proyecto Firebase con plan compatible con los servicios utilizados
+```text
+Navegador ── ID token ──> API Next.js ── Admin SDK ──> Realtime Database
+    │                           │
+    ├── listeners públicos/propios
+    └── fotografías propias ─────────────────────────────> Storage
+```
 
-## Inicio local
+```text
+src/
+├── app/                    # Páginas y API REST
+├── components/             # UI, formularios y subastas
+├── contexts/               # Sesión Firebase
+├── lib/
+│   ├── auctions/           # Motor, dinero y transacciones
+│   ├── auth/               # Verificación de tokens
+│   ├── firebase/           # SDK cliente y SDK administrativo
+│   └── vehicles/           # Filtros y seguridad de imágenes
+└── types/                  # Modelo de dominio
+scripts/                    # Cuentas y seed académico con guardas
+tests/                      # Unitarias e integración con emuladores
+```
+
+## Instalación local
+
+Requiere Node.js 20.9 o posterior, npm y Java 21 para los emuladores.
 
 ```bash
 npm install
@@ -34,76 +53,88 @@ copy .env.example .env.local
 npm run dev
 ```
 
-Abre [http://localhost:3000](http://localhost:3000). Completa `.env.local` antes de probar registro, inicio de sesión, publicación o edición.
+Abre [http://localhost:3000](http://localhost:3000). Completa `.env.local` con los valores del proyecto; el archivo está excluido de Git.
 
 ## Variables de entorno
 
-Consulta `.env.example`. Las variables `NEXT_PUBLIC_FIREBASE_*` pertenecen a la aplicación web y pueden llegar al navegador. Las variables `FIREBASE_*` corresponden al Admin SDK y se usan únicamente en Route Handlers del servidor.
+Variables públicas del Firebase Web SDK:
 
-Para `FIREBASE_PRIVATE_KEY`, conserva los saltos de línea escapados (`\n`) dentro de comillas.
+```text
+NEXT_PUBLIC_FIREBASE_API_KEY
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN
+NEXT_PUBLIC_FIREBASE_DATABASE_URL
+NEXT_PUBLIC_FIREBASE_PROJECT_ID
+NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET
+NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID
+NEXT_PUBLIC_FIREBASE_APP_ID
+```
 
-## Configuración manual de Firebase
+Variables privadas, disponibles solo en el servidor:
 
-1. Crea un proyecto en Firebase Console y registra una aplicación web.
-2. En **Authentication > Sign-in method**, habilita **Correo electrónico/contraseña**.
-3. Crea una instancia de **Realtime Database** y copia su URL.
-4. Habilita **Storage** y copia el nombre del bucket.
-5. En **Configuración del proyecto > Cuentas de servicio**, genera una clave privada para el Admin SDK. Guarda sus valores solo en `.env.local` o en secretos del proveedor de despliegue.
-6. Instala Firebase CLI, inicia sesión y vincula el proyecto:
+```text
+FIREBASE_PROJECT_ID
+FIREBASE_CLIENT_EMAIL
+FIREBASE_PRIVATE_KEY
+FIREBASE_DATABASE_URL
+```
 
-   ```bash
-   firebase login
-   firebase use --add
-   firebase deploy --only database,storage
-   ```
+`FIREBASE_PRIVATE_KEY` debe conservar los saltos de línea como `\n`. Nunca uses el prefijo `NEXT_PUBLIC_` para credenciales administrativas. Consulta [`.env.example`](.env.example) y la [guía de despliegue](docs/deployment.md).
 
-   Esto publica `database.rules.json` y `storage.rules`.
+## Configuración de Firebase
 
-7. Agrega los dominios locales y de producción a **Authentication > Settings > Authorized domains**.
-8. Crea tres cuentas de prueba y actualiza la tabla anterior.
+1. Habilita **Authentication > Sign-in method > Correo electrónico/contraseña**.
+2. Configura Realtime Database y Storage en `subasta-vehiculos-907c4`.
+3. Mantén publicadas `database.rules.json` y `storage.rules`.
+4. Agrega `localhost` y el dominio final de Vercel en **Authentication > Settings > Authorized domains**.
+5. Configura las once variables anteriores en local y en Vercel.
 
-### Diagnóstico de registro
-
-Si el registro muestra `auth/invalid-api-key` o
-`auth/api-key-not-valid.-please-pass-a-valid-api-key.`, vuelve a Firebase Console >
-Configuración del proyecto > General > Tus apps, abre la aplicación web y copia
-el valor actual de `apiKey` a `NEXT_PUBLIC_FIREBASE_API_KEY`. Después reinicia el
-servidor de Next.js. Si utilizas restricciones en Google Cloud Console, la clave
-debe pertenecer al mismo proyecto y permitir Identity Toolkit API y Token Service
-API. Un error `auth/operation-not-allowed` requiere habilitar el proveedor
-Correo electrónico/contraseña, mientras que `auth/unauthorized-domain` requiere
-agregar el dominio en Authentication > Settings > Authorized domains.
-
-Las escrituras de vehículos desde el cliente están denegadas por las reglas. La API verifica el ID token, valida el contenido y usa Admin SDK. Storage permite que cada usuario escriba únicamente dentro de su carpeta y limita archivos a imágenes menores de 8 MB.
+Las reglas permiten lectura pública del inventario y del estado público de las subastas. Cada usuario solo puede leer su perfil y su estado privado. El historial, `leaderUid` y las pujas privadas no son legibles desde el cliente. Storage acepta JPG, PNG o WebP menores de 8 MiB dentro de la carpeta del propietario e impide sobrescrituras.
 
 ## API REST
 
 | Método | Ruta                            | Acceso                       |
 | ------ | ------------------------------- | ---------------------------- |
-| GET    | `/api/vehicles`                 | Público                      |
-| GET    | `/api/vehicles/:id`             | Público                      |
-| POST   | `/api/vehicles`                 | Token Firebase obligatorio   |
-| PUT    | `/api/vehicles/:id`             | Token Firebase y propietario |
-| GET    | `/api/auctions/:vehicleId`      | Público                      |
-| POST   | `/api/auctions/:vehicleId/bids` | Token Firebase obligatorio   |
+| `GET`  | `/api/vehicles`                 | Público                      |
+| `GET`  | `/api/vehicles/:id`             | Público                      |
+| `POST` | `/api/vehicles`                 | Token Firebase               |
+| `PUT`  | `/api/vehicles/:id`             | Token Firebase y propietario |
+| `GET`  | `/api/auctions/:vehicleId`      | Público                      |
+| `POST` | `/api/auctions/:vehicleId/bids` | Token Firebase               |
 
 Las rutas protegidas esperan `Authorization: Bearer <ID_TOKEN>`.
 
-## Estructura principal
+## Motor de subastas
 
-```text
-src/
-├── app/                    # App Router, páginas y Route Handlers
-├── components/             # UI, layout, autenticación y vehículos
-├── contexts/               # Estado global de autenticación
-├── lib/
-│   ├── auth/               # Verificación de token en servidor
-│   ├── auctions/           # Dinero, reglas de puja y transacciones atómicas
-│   └── firebase/           # Web SDK y Admin SDK separados
-└── types/                  # Modelo de dominio
+- Los importes se convierten a centavos antes de evaluarse.
+- La primera oferta debe ser estrictamente superior al precio base.
+- Las ofertas posteriores deben aumentar al menos 10 %, redondeado a centavos.
+- Solo se aceptan ofertas entre `startAt` y `endAt`.
+- Precio, historial, líder e indicadores se actualizan en una sola transacción.
+- Precio base y fechas quedan bloqueados después de la primera oferta.
+- Los estados son `UPCOMING`, `LIVE`, `SOLD` y `UNSOLD`.
+- Los listeners actualizan precio e indicador privado sin recargar la página.
+
+Para probar concurrencia manual, abre el mismo vehículo con dos cuentas en sesiones independientes. Envía simultáneamente el mismo mínimo: una petición debe confirmarse y la otra recibir conflicto o un nuevo mínimo. Luego supera la puja desde la segunda sesión y comprueba los mensajes privados de ambas cuentas.
+
+## Datos y cuentas de evaluación
+
+No se han creado todavía datos ni cuentas definitivas en Firebase real. Requieren autorización expresa.
+
+```bash
+# Simulación; no escribe en Firebase
+npm run accounts:prepare
+npm run seed:demo
+
+# Solo después de autorización explícita
+npm run accounts:prepare -- --apply --project subasta-vehiculos-907c4
+npm run seed:demo -- --apply --project subasta-vehiculos-907c4
 ```
 
-## Validación de calidad
+El primer script crea tres cuentas y perfiles reservados sin modificar cuentas existentes. Sus contraseñas se guardan en `.secrets/evaluation-accounts.json`, excluido de Git, y no se imprimen. El segundo crea seis vehículos claramente marcados, cinco PNG originales por vehículo y subastas en los cuatro estados. Es idempotente y se detiene si un identificador u objeto reservado contiene datos ajenos al seed.
+
+Las credenciales desechables se incorporarán aquí únicamente después de crear y validar las cuentas. No se publicarán credenciales personales ni administrativas.
+
+## Pruebas y seguridad
 
 ```bash
 npm run lint
@@ -111,23 +142,11 @@ npm run typecheck
 npm test
 npm run test:emulators
 npm run build
+npm audit --omit=dev
 ```
 
-`npm run test:emulators` requiere Java 21 o posterior y Firebase CLI. Usa el
-proyecto local `demo-autopujo`; no lee ni modifica datos del proyecto Firebase
-real.
+`test:emulators` usa `demo-autopujo` y no toca el proyecto real. Las validaciones cubren reglas, autorización por propietario, cinco imágenes, fechas, importes, privacidad, listeners y concurrencia. El reporte exacto y las limitaciones están en la [matriz académica](docs/academic-compliance.md).
 
-## Seguridad del motor de subastas
+## Costos y límites
 
-El cliente solo puede leer `auctions/{vehicleId}/public` y su propio estado en
-`auctions/{vehicleId}/userStates/{uid}`. El historial y el UID del líder se
-guardan bajo `private`, sin lectura desde el navegador. Todas las escrituras de
-pujas pasan por la API y se confirman mediante una transacción sobre la subasta
-completa, manteniendo consistentes el precio, el historial y los indicadores.
-
-Antes de habilitar el tiempo real en producción, valida las reglas con
-`npm run test:emulators` y despliega explícitamente:
-
-```bash
-firebase deploy --project subasta-vehiculos-907c4 --only database
-```
+La solución usa únicamente Firebase y Vercel. No requiere un servidor persistente ni servicios adicionales. Las lecturas en tiempo real, Storage y ejecuciones serverless consumen las cuotas de cada proveedor; las pruebas de carga no forman parte del procedimiento de entrega.
