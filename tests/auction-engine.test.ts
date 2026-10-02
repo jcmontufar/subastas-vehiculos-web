@@ -112,6 +112,20 @@ describe("motor atómico de subastas", () => {
     expect(second.record.userStates?.["user-b"]?.isWinning).toBe(true);
     expect(second.record.public).not.toHaveProperty("leaderUid");
   });
+
+  it("conserva metadatos superiores al registrar una oferta", () => {
+    const record = {
+      ...createAuctionRecord(vehicle, liveNow),
+      demoMarker: "autopujo-academic-demo-v1",
+    } as ReturnType<typeof createAuctionRecord> & { demoMarker: string };
+
+    const result = bid(record, "user-a", baseCents + 1);
+
+    expect(result.record).toHaveProperty(
+      "demoMarker",
+      "autopujo-academic-demo-v1",
+    );
+  });
 });
 
 describe("representación monetaria", () => {

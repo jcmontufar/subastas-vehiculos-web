@@ -1,6 +1,8 @@
 # AutoPujo — subastas de vehículos en tiempo real
 
-> **Producción:** pendiente de despliegue autorizado en Vercel. No existe todavía una URL pública verificada.
+> **Producción:** [subastas-vehiculos-web.vercel.app](https://subastas-vehiculos-web.vercel.app)
+>
+> **Código fuente:** [github.com/jcmontufar/subastas-vehiculos-web](https://github.com/jcmontufar/subastas-vehiculos-web)
 
 AutoPujo es una plataforma académica para publicar vehículos, consultar un inventario público y participar en subastas con actualización en tiempo real. La aplicación protege la identidad de los postores y confirma cada oferta mediante una transacción atómica ejecutada en el servidor.
 
@@ -118,7 +120,13 @@ Para probar concurrencia manual, abre el mismo vehículo con dos cuentas en sesi
 
 ## Datos y cuentas de evaluación
 
-No se han creado todavía datos ni cuentas definitivas en Firebase real. Requieren autorización expresa.
+Firebase real contiene seis vehículos académicos, 30 fotografías originales y tres cuentas descartables. No son cuentas personales y pueden eliminarse al terminar la evaluación.
+
+| Perfil | Correo | Contraseña |
+| --- | --- | --- |
+| Publicador 1 | `publicador1@subasta-vehiculos-907c4.test` | `CCMAogIR6INR1WJho8tqBUH6aA1!` |
+| Publicador 2 | `publicador2@subasta-vehiculos-907c4.test` | `kG0DtVdtRh9QszXT7meT-V0LaA1!` |
+| Postor | `postor@subasta-vehiculos-907c4.test` | `PN17MS3go8PPmovRwMO0TYEhaA1!` |
 
 ```bash
 # Simulación; no escribe en Firebase
@@ -130,9 +138,9 @@ npm run accounts:prepare -- --apply --project subasta-vehiculos-907c4
 npm run seed:demo -- --apply --project subasta-vehiculos-907c4
 ```
 
-El primer script crea tres cuentas y perfiles reservados sin modificar cuentas existentes. Sus contraseñas se guardan en `.secrets/evaluation-accounts.json`, excluido de Git, y no se imprimen. El segundo crea seis vehículos claramente marcados, cinco fotografías demostrativas originales generadas para el proyecto por vehículo y subastas en los cuatro estados. Es idempotente y se detiene si un identificador u objeto reservado contiene datos ajenos al seed.
+El primer script crea tres cuentas y perfiles reservados sin modificar cuentas existentes. Sus contraseñas también se guardan en `.secrets/evaluation-accounts.json`, excluido de Git. El segundo crea seis vehículos claramente marcados, cinco fotografías demostrativas originales generadas para el proyecto por vehículo y subastas en los cuatro estados. Es idempotente y se detiene si un identificador u objeto reservado contiene datos ajenos al seed.
 
-Las credenciales desechables se incorporarán aquí únicamente después de crear y validar las cuentas. No se publicarán credenciales personales ni administrativas.
+Solo se publican las credenciales desechables anteriores. Las credenciales administrativas de Firebase permanecen fuera del repositorio.
 
 ## Pruebas y seguridad
 

@@ -134,6 +134,7 @@ export function applyBid(
   };
 
   const next: AuctionRecord = {
+    ...record,
     public: {
       ...record.public,
       currentBidCents: input.amountCents,

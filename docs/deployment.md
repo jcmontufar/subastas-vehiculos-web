@@ -2,6 +2,8 @@
 
 Este procedimiento no debe ejecutarse sin autorización explícita del propietario de las cuentas externas.
 
+Producción verificada: [subastas-vehiculos-web.vercel.app](https://subastas-vehiculos-web.vercel.app). Repositorio: [github.com/jcmontufar/subastas-vehiculos-web](https://github.com/jcmontufar/subastas-vehiculos-web).
+
 ## 1. Preparación de GitHub
 
 Nombre requerido: `subastas-vehiculos-web`.
