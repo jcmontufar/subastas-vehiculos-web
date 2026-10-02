@@ -1,7 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
-import { deflateSync } from "node:zlib";
 import { cert, initializeApp } from "firebase-admin/app";
 import { getAuth } from "firebase-admin/auth";
 import { getDatabase } from "firebase-admin/database";
@@ -10,8 +9,7 @@ import { getStorage } from "firebase-admin/storage";
 const PROJECT_ID = "subasta-vehiculos-907c4";
 const DEMO_MARKER = "autopujo-academic-demo-v1";
 const MANIFEST_PATH = path.resolve(".secrets", "evaluation-accounts.json");
-const WIDTH = 960;
-const HEIGHT = 540;
+const ASSET_ROOT = path.resolve("demo-assets");
 
 const catalog = [
   {
@@ -28,7 +26,6 @@ const catalog = [
     damageLevel: "GREEN",
     basePrice: 20000,
     state: "UPCOMING",
-    color: [32, 100, 190],
   },
   {
     id: "demo-honda-civic",
@@ -44,7 +41,6 @@ const catalog = [
     damageLevel: "YELLOW",
     basePrice: 24000,
     state: "LIVE",
-    color: [180, 42, 50],
   },
   {
     id: "demo-mazda-cx5",
@@ -60,7 +56,6 @@ const catalog = [
     damageLevel: "GREEN",
     basePrice: 36000,
     state: "LIVE",
-    color: [112, 32, 50],
   },
   {
     id: "demo-hyundai-tucson",
@@ -76,7 +71,6 @@ const catalog = [
     damageLevel: "YELLOW",
     basePrice: 28500,
     state: "SOLD",
-    color: [70, 82, 96],
   },
   {
     id: "demo-toyota-hilux",
@@ -92,7 +86,6 @@ const catalog = [
     damageLevel: "RED",
     basePrice: 32000,
     state: "UNSOLD",
-    color: [45, 110, 78],
   },
   {
     id: "demo-ford-mustang",
@@ -108,7 +101,6 @@ const catalog = [
     damageLevel: "GREEN",
     basePrice: 52000,
     state: "LIVE",
-    color: [220, 130, 24],
   },
 ];
 
@@ -136,73 +128,6 @@ function requireEnvironment() {
     throw new Error(`Faltan variables de Firebase: ${missing.join(", ")}`);
   }
   return values;
-}
-
-function crc32(buffer) {
-  let crc = 0xffffffff;
-  for (const byte of buffer) {
-    crc ^= byte;
-    for (let bit = 0; bit < 8; bit += 1) {
-      crc = (crc >>> 1) ^ (crc & 1 ? 0xedb88320 : 0);
-    }
-  }
-  return (crc ^ 0xffffffff) >>> 0;
-}
-
-function pngChunk(type, data) {
-  const name = Buffer.from(type);
-  const length = Buffer.alloc(4);
-  length.writeUInt32BE(data.length);
-  const checksum = Buffer.alloc(4);
-  checksum.writeUInt32BE(crc32(Buffer.concat([name, data])));
-  return Buffer.concat([length, name, data, checksum]);
-}
-
-function createDemoImage(baseColor, variant) {
-  const rows = Buffer.alloc((WIDTH * 4 + 1) * HEIGHT);
-  const wheelY = 390 + variant * 3;
-  for (let y = 0; y < HEIGHT; y += 1) {
-    const rowStart = y * (WIDTH * 4 + 1);
-    rows[rowStart] = 0;
-    for (let x = 0; x < WIDTH; x += 1) {
-      const index = rowStart + 1 + x * 4;
-      const sky = y < 360;
-      let color = sky
-        ? [225 - Math.floor(y / 12), 239 - Math.floor(y / 18), 250]
-        : [58 + Math.floor(y / 20), 67 + Math.floor(y / 20), 78];
-      const body = y > 270 && y < 390 && x > 150 && x < 820;
-      const roof = y > 205 && y <= 300 && x > 315 && x < 660;
-      const hoodSlope = y > 245 && y < 310 && x > 660 && x < 790;
-      const wheel =
-        Math.hypot(x - (290 + variant * 5), y - wheelY) < 58 ||
-        Math.hypot(x - (690 - variant * 5), y - wheelY) < 58;
-      const hub =
-        Math.hypot(x - (290 + variant * 5), y - wheelY) < 27 ||
-        Math.hypot(x - (690 - variant * 5), y - wheelY) < 27;
-      if (body || roof || hoodSlope) {
-        const highlight = Math.max(0, 28 - Math.floor((y - 230) / 5));
-        color = baseColor.map((value) => Math.min(255, value + highlight));
-      }
-      if (roof && y < 275 && x > 350 && x < 625) color = [55, 78, 98];
-      if (wheel) color = [22, 26, 32];
-      if (hub) color = [176, 184, 194];
-      if ((x + variant * 73) % 290 < 3 && sky) color = [205, 220, 236];
-      rows[index] = color[0];
-      rows[index + 1] = color[1];
-      rows[index + 2] = color[2];
-      rows[index + 3] = 255;
-    }
-  }
-  const header = Buffer.alloc(13);
-  header.writeUInt32BE(WIDTH, 0);
-  header.writeUInt32BE(HEIGHT, 4);
-  header.set([8, 6, 0, 0, 0], 8);
-  return Buffer.concat([
-    Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]),
-    pngChunk("IHDR", header),
-    pngChunk("IDAT", deflateSync(rows, { level: 9 })),
-    pngChunk("IEND", Buffer.alloc(0)),
-  ]);
 }
 
 function scheduleFor(state, now) {
@@ -312,12 +237,17 @@ async function main() {
     const images = [];
     for (let index = 0; index < 5; index += 1) {
       const objectPath = `vehicles/${owner.uid}/academic-demo/${definition.id}/${index + 1}.png`;
+      const assetPath = path.join(
+        ASSET_ROOT,
+        definition.id,
+        `${String(index + 1).padStart(2, "0")}.png`,
+      );
       images.push({
         id: `${definition.id}-${index + 1}`,
         url: await getDownloadUrl(
           bucket,
           objectPath,
-          createDemoImage(definition.color, index),
+          await readFile(assetPath),
         ),
         storagePath: objectPath,
         order: index,
@@ -333,7 +263,6 @@ async function main() {
     updates[`vehicles/${definition.id}`] = {
       ...definition,
       state: null,
-      color: null,
       ownerId: owner.uid,
       images,
       startAt,

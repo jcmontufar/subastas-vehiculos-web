@@ -130,7 +130,7 @@ npm run accounts:prepare -- --apply --project subasta-vehiculos-907c4
 npm run seed:demo -- --apply --project subasta-vehiculos-907c4
 ```
 
-El primer script crea tres cuentas y perfiles reservados sin modificar cuentas existentes. Sus contraseñas se guardan en `.secrets/evaluation-accounts.json`, excluido de Git, y no se imprimen. El segundo crea seis vehículos claramente marcados, cinco PNG originales por vehículo y subastas en los cuatro estados. Es idempotente y se detiene si un identificador u objeto reservado contiene datos ajenos al seed.
+El primer script crea tres cuentas y perfiles reservados sin modificar cuentas existentes. Sus contraseñas se guardan en `.secrets/evaluation-accounts.json`, excluido de Git, y no se imprimen. El segundo crea seis vehículos claramente marcados, cinco fotografías demostrativas originales generadas para el proyecto por vehículo y subastas en los cuatro estados. Es idempotente y se detiene si un identificador u objeto reservado contiene datos ajenos al seed.
 
 Las credenciales desechables se incorporarán aquí únicamente después de crear y validar las cuentas. No se publicarán credenciales personales ni administrativas.
 
