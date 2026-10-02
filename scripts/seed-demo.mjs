@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
-import { cert, initializeApp } from "firebase-admin/app";
+import { cert, deleteApp, initializeApp } from "firebase-admin/app";
 import { getAuth } from "firebase-admin/auth";
 import { getDatabase } from "firebase-admin/database";
 import { getStorage } from "firebase-admin/storage";
@@ -10,6 +10,7 @@ const PROJECT_ID = "subasta-vehiculos-907c4";
 const DEMO_MARKER = "autopujo-academic-demo-v1";
 const MANIFEST_PATH = path.resolve(".secrets", "evaluation-accounts.json");
 const ASSET_ROOT = path.resolve("demo-assets");
+let activeApp;
 
 const catalog = [
   {
@@ -202,6 +203,7 @@ async function main() {
     databaseURL: environment.databaseURL,
     storageBucket: environment.storageBucket,
   });
+  activeApp = app;
   const database = getDatabase(app);
   const auth = getAuth(app);
   const bucket = getStorage(app).bucket();
@@ -318,7 +320,11 @@ async function main() {
   console.log("No se eliminó ni sobrescribió ningún registro ajeno al seed.");
 }
 
-main().catch((error) => {
-  console.error(error instanceof Error ? error.message : "Error inesperado");
-  process.exitCode = 1;
-});
+main()
+  .catch((error) => {
+    console.error(error instanceof Error ? error.message : "Error inesperado");
+    process.exitCode = 1;
+  })
+  .finally(async () => {
+    if (activeApp) await deleteApp(activeApp);
+  });

@@ -1,7 +1,7 @@
 import { randomBytes } from "node:crypto";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
-import { cert, initializeApp } from "firebase-admin/app";
+import { cert, deleteApp, initializeApp } from "firebase-admin/app";
 import { getAuth } from "firebase-admin/auth";
 import { getDatabase } from "firebase-admin/database";
 
@@ -28,6 +28,7 @@ const accountDefinitions = [
     lastName: "Evaluación",
   },
 ];
+let activeApp;
 
 function hasFlag(name) {
   return process.argv.includes(name);
@@ -123,6 +124,7 @@ async function main() {
     credential: cert(environment),
     databaseURL: environment.databaseURL,
   });
+  activeApp = app;
   const auth = getAuth(app);
   const database = getDatabase(app);
 
@@ -175,7 +177,11 @@ async function main() {
   );
 }
 
-main().catch((error) => {
-  console.error(error instanceof Error ? error.message : "Error inesperado");
-  process.exitCode = 1;
-});
+main()
+  .catch((error) => {
+    console.error(error instanceof Error ? error.message : "Error inesperado");
+    process.exitCode = 1;
+  })
+  .finally(async () => {
+    if (activeApp) await deleteApp(activeApp);
+  });
