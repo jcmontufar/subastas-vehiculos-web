@@ -41,6 +41,16 @@ export function Header() {
           </Link>
           {!loading && user ? (
             <>
+              <span
+                aria-label="Usuario autenticado"
+                className="inline-flex items-center gap-2 rounded-lg bg-slate-50 px-3 py-2 text-sm font-semibold text-slate-700"
+                title={user.email ?? undefined}
+              >
+                <UserRound className="size-4 text-blue-600" />
+                <span className="max-w-44 truncate">
+                  {user.displayName || user.email}
+                </span>
+              </span>
               <Link
                 href="/mis-publicaciones"
                 onClick={close}

@@ -1,0 +1,452 @@
+{
+  "generatedAt": "2026-10-03T00:03:03.650Z",
+  "baseUrl": "https://subastas-vehiculos-web.vercel.app",
+  "gitCommit": "c0f1472f5c68310bb8cbe0400a8ad1ab5bcc3589",
+  "results": [
+    {
+      "area": "1",
+      "test": "home producción responde 200",
+      "status": "CUMPLE",
+      "detail": "HTTP 200"
+    },
+    {
+      "area": "1",
+      "test": "inventario y estilos cargan",
+      "status": "CUMPLE",
+      "detail": "6 tarjetas"
+    },
+    {
+      "area": "1",
+      "test": "fotografías del inventario sin roturas",
+      "status": "CUMPLE",
+      "detail": ""
+    },
+    {
+      "area": "1",
+      "test": "API pública de vehículos",
+      "status": "CUMPLE",
+      "detail": "HTTP 200"
+    },
+    {
+      "area": "2",
+      "test": "ruta protegida redirige al anónimo",
+      "status": "CUMPLE",
+      "detail": "https://subastas-vehiculos-web.vercel.app/login?next=%2Fpublicar"
+    },
+    {
+      "area": "2",
+      "test": "endpoint de pujas rechaza anónimo",
+      "status": "CUMPLE",
+      "detail": "HTTP 401"
+    },
+    {
+      "area": "2",
+      "test": "registro muestra seis campos",
+      "status": "CUMPLE",
+      "detail": ""
+    },
+    {
+      "area": "2",
+      "test": "validaciones de registro en español",
+      "status": "CUMPLE",
+      "detail": ""
+    },
+    {
+      "area": "4",
+      "test": "siete filtros disponibles",
+      "status": "CUMPLE",
+      "detail": ""
+    },
+    {
+      "area": "4",
+      "test": "filtro 1 individual",
+      "status": "CUMPLE",
+      "detail": "2022"
+    },
+    {
+      "area": "4",
+      "test": "filtro 2 individual",
+      "status": "CUMPLE",
+      "detail": "Ford"
+    },
+    {
+      "area": "4",
+      "test": "filtro 3 individual",
+      "status": "CUMPLE",
+      "detail": "CX-5 Grand Touring"
+    },
+    {
+      "area": "4",
+      "test": "filtro 4 individual",
+      "status": "CUMPLE",
+      "detail": "Diésel"
+    },
+    {
+      "area": "4",
+      "test": "filtro 5 individual",
+      "status": "CUMPLE",
+      "detail": "Automática"
+    },
+    {
+      "area": "4",
+      "test": "filtro 6 individual",
+      "status": "CUMPLE",
+      "detail": "4WD"
+    },
+    {
+      "area": "4",
+      "test": "filtro 7 individual",
+      "status": "CUMPLE",
+      "detail": "Menor / limpio"
+    },
+    {
+      "area": "4",
+      "test": "combinación de filtros",
+      "status": "CUMPLE",
+      "detail": ""
+    },
+    {
+      "area": "4",
+      "test": "estado sin resultados",
+      "status": "CUMPLE",
+      "detail": ""
+    },
+    {
+      "area": "4",
+      "test": "limpiar filtros restaura inventario",
+      "status": "CUMPLE",
+      "detail": ""
+    },
+    {
+      "area": "4",
+      "test": "combinación año + combustible",
+      "status": "CUMPLE",
+      "detail": ""
+    },
+    {
+      "area": "4",
+      "test": "combinación marca + daño",
+      "status": "CUMPLE",
+      "detail": ""
+    },
+    {
+      "area": "4",
+      "test": "combinación combustible + transmisión + daño",
+      "status": "CUMPLE",
+      "detail": ""
+    },
+    {
+      "area": "3",
+      "test": "hay ejemplos verde, amarillo y rojo",
+      "status": "CUMPLE",
+      "detail": ""
+    },
+    {
+      "area": "3",
+      "test": "detalle contiene ficha técnica completa",
+      "status": "CUMPLE",
+      "detail": ""
+    },
+    {
+      "area": "3",
+      "test": "carrusel siguiente y anterior",
+      "status": "CUMPLE",
+      "detail": ""
+    },
+    {
+      "area": "3",
+      "test": "galería sin imágenes rotas",
+      "status": "CUMPLE",
+      "detail": ""
+    },
+    {
+      "area": "2",
+      "test": "visitante no puede ofertar desde la interfaz",
+      "status": "CUMPLE",
+      "detail": ""
+    },
+    {
+      "area": "5",
+      "test": "temporizador visitante avanza durante 10 segundos",
+      "status": "CUMPLE",
+      "detail": "13d\n21h\n48m\n45s → 13d\n21h\n48m\n35s"
+    },
+    {
+      "area": "7",
+      "test": "responsive 390px sin desbordamiento",
+      "status": "CUMPLE",
+      "detail": ""
+    },
+    {
+      "area": "7",
+      "test": "responsive 768px sin desbordamiento",
+      "status": "CUMPLE",
+      "detail": ""
+    },
+    {
+      "area": "7",
+      "test": "responsive 1440px sin desbordamiento",
+      "status": "CUMPLE",
+      "detail": ""
+    },
+    {
+      "area": "2",
+      "test": "tres cuentas de evaluación autentican",
+      "status": "CUMPLE",
+      "detail": ""
+    },
+    {
+      "area": "2",
+      "test": "sesión persiste tras recarga",
+      "status": "CUMPLE",
+      "detail": ""
+    },
+    {
+      "area": "2",
+      "test": "identificación nominal del usuario en la interfaz",
+      "status": "NO CUMPLE",
+      "detail": "La sesión se reconoce por las opciones protegidas, pero el encabezado no muestra nombre ni correo"
+    },
+    {
+      "area": "7",
+      "test": "formulario responsive 390px",
+      "status": "CUMPLE",
+      "detail": ""
+    },
+    {
+      "area": "7",
+      "test": "detalle/subasta responsive 390px",
+      "status": "CUMPLE",
+      "detail": ""
+    },
+    {
+      "area": "7",
+      "test": "formulario responsive 768px",
+      "status": "CUMPLE",
+      "detail": ""
+    },
+    {
+      "area": "7",
+      "test": "detalle/subasta responsive 768px",
+      "status": "CUMPLE",
+      "detail": ""
+    },
+    {
+      "area": "7",
+      "test": "formulario responsive 1440px",
+      "status": "CUMPLE",
+      "detail": ""
+    },
+    {
+      "area": "7",
+      "test": "detalle/subasta responsive 1440px",
+      "status": "CUMPLE",
+      "detail": ""
+    },
+    {
+      "area": "3",
+      "test": "campos obligatorios del formulario",
+      "status": "CUMPLE",
+      "detail": ""
+    },
+    {
+      "area": "3",
+      "test": "mínimo de cinco fotografías validado",
+      "status": "CUMPLE",
+      "detail": ""
+    },
+    {
+      "area": "3",
+      "test": "vista previa de cinco fotografías",
+      "status": "CUMPLE",
+      "detail": ""
+    },
+    {
+      "area": "3",
+      "test": "eliminación de fotografía previa",
+      "status": "CUMPLE",
+      "detail": ""
+    },
+    {
+      "area": "3",
+      "test": "precio inválido rechazado por formulario",
+      "status": "CUMPLE",
+      "detail": ""
+    },
+    {
+      "area": "3",
+      "test": "rango de fechas inválido rechazado",
+      "status": "CUMPLE",
+      "detail": ""
+    },
+    {
+      "area": "3",
+      "test": "publicación temporal persiste",
+      "status": "CUMPLE",
+      "detail": "-P2z3SCvdbyhb6olyUYQ"
+    },
+    {
+      "area": "3",
+      "test": "cinco archivos almacenados",
+      "status": "CUMPLE",
+      "detail": ""
+    },
+    {
+      "area": "6",
+      "test": "Storage impide sobrescribir fotografía",
+      "status": "CUMPLE",
+      "detail": "HTTP 403"
+    },
+    {
+      "area": "3",
+      "test": "edición del propietario persiste",
+      "status": "CUMPLE",
+      "detail": ""
+    },
+    {
+      "area": "3",
+      "test": "otro usuario no puede editar",
+      "status": "CUMPLE",
+      "detail": ""
+    },
+    {
+      "area": "2",
+      "test": "estado público legible anónimamente",
+      "status": "CUMPLE",
+      "detail": ""
+    },
+    {
+      "area": "2",
+      "test": "historial privado no es legible",
+      "status": "CUMPLE",
+      "detail": "HTTP 401"
+    },
+    {
+      "area": "2",
+      "test": "estado de otro postor no es legible",
+      "status": "CUMPLE",
+      "detail": "HTTP 401"
+    },
+    {
+      "area": "6",
+      "test": "oferta antes del inicio rechazada",
+      "status": "CUMPLE",
+      "detail": "AUCTION_NOT_STARTED"
+    },
+    {
+      "area": "5",
+      "test": "temporizador se actualiza sin recarga",
+      "status": "CUMPLE",
+      "detail": "0d\n00h\n39m\n58s → 0d\n00h\n39m\n48s"
+    },
+    {
+      "area": "6",
+      "test": "oferta Q19,999 se rechaza",
+      "status": "CUMPLE",
+      "detail": "BID_TOO_LOW"
+    },
+    {
+      "area": "6",
+      "test": "precio base exacto se rechaza",
+      "status": "CUMPLE",
+      "detail": "BID_TOO_LOW"
+    },
+    {
+      "area": "6",
+      "test": "primera oferta mayor al precio base",
+      "status": "CUMPLE",
+      "detail": ""
+    },
+    {
+      "area": "5",
+      "test": "listener de B recibe oferta sin recarga",
+      "status": "CUMPLE",
+      "detail": ""
+    },
+    {
+      "area": "6",
+      "test": "incremento inferior al 10% rechazado",
+      "status": "CUMPLE",
+      "detail": "BID_TOO_LOW"
+    },
+    {
+      "area": "6",
+      "test": "incremento mínimo exacto aceptado",
+      "status": "CUMPLE",
+      "detail": ""
+    },
+    {
+      "area": "5",
+      "test": "indicadores ganador y superado por listener",
+      "status": "CUMPLE",
+      "detail": ""
+    },
+    {
+      "area": "6",
+      "test": "incremento superior al 10% aceptado",
+      "status": "CUMPLE",
+      "detail": ""
+    },
+    {
+      "area": "6",
+      "test": "concurrencia acepta una sola oferta",
+      "status": "CUMPLE",
+      "detail": "201, 409"
+    },
+    {
+      "area": "6",
+      "test": "concurrencia preserva historial y estado público",
+      "status": "CUMPLE",
+      "detail": "2 ofertas públicas, 2 registros privados; importe ganador consistente"
+    },
+    {
+      "area": "5",
+      "test": "postor puede leer solo su estado",
+      "status": "CUMPLE",
+      "detail": ""
+    },
+    {
+      "area": "5",
+      "test": "estado público no expone UID ganador",
+      "status": "CUMPLE",
+      "detail": ""
+    },
+    {
+      "area": "6",
+      "test": "subasta finalizada rechaza ofertas",
+      "status": "CUMPLE",
+      "detail": "AUCTION_ENDED"
+    },
+    {
+      "area": "6",
+      "test": "cierre con ofertas resulta VENDIDO",
+      "status": "CUMPLE",
+      "detail": "SOLD"
+    },
+    {
+      "area": "6",
+      "test": "cierre sin ofertas resulta NO VENDIDO",
+      "status": "CUMPLE",
+      "detail": "UNSOLD"
+    },
+    {
+      "area": "2",
+      "test": "logout bloquea rutas privadas",
+      "status": "CUMPLE",
+      "detail": ""
+    },
+    {
+      "area": "1",
+      "test": "errores graves de consola",
+      "status": "CUMPLE",
+      "detail": ""
+    },
+    {
+      "area": "limpieza",
+      "test": "vehículo temporal, subasta y fotografías",
+      "status": "CUMPLE",
+      "detail": "-P2z3SCvdbyhb6olyUYQ"
+    }
+  ],
+  "browserErrors": []
+}
