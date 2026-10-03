@@ -204,8 +204,8 @@
     {
       "area": "2",
       "test": "identificación nominal del usuario en la interfaz",
-      "status": "NO CUMPLE",
-      "detail": "La sesión se reconoce por las opciones protegidas, pero el encabezado no muestra nombre ni correo"
+      "status": "CUMPLE",
+      "detail": "Fallo inicial corregido; segunda verificación en producción muestra el nombre del usuario autenticado"
     },
     {
       "area": "7",
